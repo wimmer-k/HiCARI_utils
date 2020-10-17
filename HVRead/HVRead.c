@@ -20,9 +20,14 @@ int main(void){
 
   (*HVLogin)();
   (*HVBdTemps)();
-	
+  //(*HVTestCh)(6, 0, "Pw");
+  //(*HVTestCh)(6, 1, "Pw");
+  //(*HVTestCh)(6, 2, "Pw");
+  //(*HVTestCh)(6, 3, "Pw");
+  //(*HVTestCh)(6, 4, "Pw");
   //(*HVChNames)();
-  (*HVReadCh)("VMon");
+  //(*HVReadCh)("VMon");
+  (*HVReadValues)();
   (*HVLogout)();
 
   return 0;
