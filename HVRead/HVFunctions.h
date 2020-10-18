@@ -12,6 +12,7 @@ void HVBdTemps(void);
 void HVChNames(void);
 void HVReadCh(char*);
 void HVReadValues();
-void HVTestCh(unsigned short, unsigned short, char *);
+void HVTestCh(unsigned short, unsigned short);
+void HVRead();
 
 extern HV System[];

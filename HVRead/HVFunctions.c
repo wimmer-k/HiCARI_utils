@@ -184,41 +184,162 @@ void HVBdTemps(){
 
 }
 
-void HVTestCh(unsigned short slot, unsigned short ch, char *pn){
+//Main function to read all importatn values from all our boards
+void HVRead(){
  int handle = -1;
   CAENHVRESULT ret;
   int i;
   char parName[30];
-  float	*fparValues = NULL;
-  //char *parValues;
-  unsigned char parValues[1024];
-  unsigned long	parType;
+  unsigned char parValues[512];
+  unsigned int parType;
+
+  char chName[MAX_CH_NAME] = "ND";
+  char onoff[5] = "ND";
+  float VMon = 0;
+  float IMon = 0;
+  unsigned int status = 0;
+  
+  char* pnames[4] = {"Pw","VMon","IMon", "Status"};
+  
   if( noHVPS() )
     return;
   
   if(( i = OneHVPS() ) >= 0 )
     handle = System[i].Handle;
 
-  unsigned short chList[MAX_CH_NUM];
-  for(int j=0;j<MAX_CH_NUM;j++){
-    chList[j] = j;
-  }
+  unsigned short slot, ch;
+  // we use every other slot
+  for(slot =0; slot<10; slot+=2){
+    int maxch_thisslot = 8;
+    if(slot ==4){
+      maxch_thisslot = 10;
+    }
 
-  strcpy(parName, pn);
-  ret = CAENHV_GetChParamProp(handle, slot, ch, parName, "Type", &parType);
-  if( ret != CAENHV_OK){
-    printf("error reading channel property %s of slot %d: %s (num. %d)\n\n", parName, slot, CAENHV_GetError(handle), ret);
+    for(ch=0;ch<maxch_thisslot;ch++){
+      
+      //channel names
+      ret = CAENHV_GetChName(handle, slot, 1, &ch, (void *)parValues);
+      if(ret != CAENHV_OK){
+	printf("error reading ch names of slot %d: %s (num. %d)\n\n", slot, CAENHV_GetError(handle), ret);
+	return;
+      }
+      strcpy(chName, (char *)parValues );
+
+      // parameters
+      for(i =0; i<4; i++){
+	strcpy(parName, pnames[i]);
+	ret = CAENHV_GetChParamProp(handle, slot, ch, parName, "Type", &parType);
+	if( ret != CAENHV_OK){
+	  printf("error reading channel property %s of slot %d: %s (num. %d)\n\n", parName, slot, CAENHV_GetError(handle), ret);
+	  return;
+	}
+	if((int)parType==PARAM_TYPE_ONOFF){
+	  ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
+	  strcpy(onoff, (*((char *)parValues)) ? "ON" : "OFF");
+	}
+	if((int)parType==PARAM_TYPE_NUMERIC){
+	  ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
+	  if(i==1)
+	    VMon = *((float *)parValues);
+	  if(i==2)
+	    IMon = *((float *)parValues);
+	}
+	if((int)parType==PARAM_TYPE_CHSTATUS){
+	  ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
+	  status = *((int *)parValues);
+	}
+      }//parameters to read
+
+      
+      printf("%s:\t%s\t%.2f\t%.5f\t",chName,onoff,VMon,IMon);
+
+      
+      char *stats[] = {"On", "Ramp Up", "Ramp Down", "Over Current",
+		       "Over Voltage", "UnderVoltage", "Ext. Trip",
+		       "max V", "ext. Disable", "Int. Trip", "Cal. Err",
+		       "Unplugged","Empty","Over Voltage Protection",
+		       "Power Fail", "Temp. Err", NULL };
+      for(int i=0; stats[i];i++){
+	if(! (status & (1 <<i))) // bit not set
+	  continue;
+	printf("%s, ", stats[i]);
+      }
+      
+      printf("\t%d\n",status);
+    }// channles
+  }// slots
+}
+
+
+void HVTestCh(unsigned short slot, unsigned short ch){
+ int handle = -1;
+  CAENHVRESULT ret;
+  int i;
+  char parName[30];
+  unsigned char parValues[512];
+  unsigned int parType;
+
+  char chName[MAX_CH_NAME] = "ND";
+  char onoff[5] = "ND";
+  float VMon = 0;
+  float IMon = 0;
+
+  char* pnames[4] = {"Pw","VMon","IMon", "Status"};
+  
+  if( noHVPS() )
+    return;
+  
+  if(( i = OneHVPS() ) >= 0 )
+    handle = System[i].Handle;
+
+  //name 
+  //channel names
+  ret = CAENHV_GetChName(handle, slot, 1, &ch, (void *)parValues);
+  if(ret != CAENHV_OK){
+    printf("error reading ch names of slot %d: %s (num. %d)\n\n", slot, CAENHV_GetError(handle), ret);
     return;
   }
-  else{
-    printf("type: %d %d\n",parType,PARAM_TYPE_ONOFF);
-  }
-  if((int)parType==PARAM_TYPE_ONOFF){
-    printf("in\n");
-    ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
-    printf("%s\n",(*((char *)parValues)) ? "ON" : "OFF");
-  }
+  strcpy(chName, (char *)parValues );
+  
+  for(i =0; i<4; i++){
+    strcpy(parName, pnames[i]);
+    ret = CAENHV_GetChParamProp(handle, slot, ch, parName, "Type", &parType);
+    if( ret != CAENHV_OK){
+      printf("error reading channel property %s of slot %d: %s (num. %d)\n\n", parName, slot, CAENHV_GetError(handle), ret);
+      return;
+    }
+    if((int)parType==PARAM_TYPE_ONOFF){
+      ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
+      strcpy(onoff, (*((char *)parValues)) ? "ON" : "OFF");
+    }
+    if((int)parType==PARAM_TYPE_NUMERIC){
+      ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
+      if(i==1)
+	VMon = *((float *)parValues);
+      if(i==2)
+	IMon = *((float *)parValues);
+    }
+
+
+    
+    if((int)parType==PARAM_TYPE_CHSTATUS){
+      ret = CAENHV_GetChParam(handle, slot, parName, 1, &ch, (void *)parValues);
+      
+      char *stats[] = {"On", "Ramp Up", "Ramp Down", "Over Current", "Over Voltage", "UnderVoltage", "Ext. Trip", "max V", "ext. Disable", "Int. Trip", "Cal. Err", "Unplugged","Empty","Over Voltage Protection", "Power Fail", "Temp. Err", NULL };
+
+      unsigned int num = *((int *)parValues);
+      printf("%X\t\t",*((int *)parValues));
+      
+      for(int i=0; stats[i];i++){
+	if(! (num & (1 <<i))) // bit not set
+	  continue;
+	printf("%s, ", stats[i]);
+      }
+    }
+  }//parameters to read
+  printf("\n%s:\t%s\t%.2f\t%.5f\n",chName,onoff,VMon,IMon);
 }
+
 void HVReadCh(char *pn){
   int handle = -1;
   CAENHVRESULT ret;
