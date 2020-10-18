@@ -37,6 +37,9 @@ def genTable(filename):
         l = datafile.readline()
         #boardID.append(int(l.split()[1]))
         #boardTemp.append(float(l.split()[-1]))
+        if len(l) == 0 or len(l.split()) <2:
+            continue
+        
         boardID = l.split()[1]
         boardTemp = l.split()[-1]
         website.write("<tr><td>"+boardID+ "</td><td>" +boardTemp+"</td></tr>\n")
@@ -45,11 +48,13 @@ def genTable(filename):
     website.write(tablefotter)
     website.close()
     filename_html = Path(filename).with_suffix('.CH.html')
-    tableheader = "<table> <tr> <th> Channel </th> <th> Vmon (V) </th><th> Imon (V) </th> <th> Status </th>  <th>  </th> </tr>\n"
+    tableheader = "<table> <tr> <th> Channel </th> <th> Vmon (V) </th><th> Imon (uA) </th> <th> Status </th>  <th>  </th> </tr>\n"
     
     website = open(filename_html, 'w')
     website.write(tableheader)
     for l in datafile.readlines():
+        if len(l) == 0 or len(l.split()) < 7:
+            continue
         name = l.split()[2][:-1]
         stat = l.split()[3]
         volt = l.split()[4]
