@@ -134,15 +134,67 @@ void HVChNames(){
     free(chNameList);
   }
 }
+
+//void OLD_HVBdTemps(){
+//  int handle = -1;
+//  CAENHVRESULT ret;
+//  int i;
+//  char parName[30];
+//  unsigned short *bdList;
+//  float	*parValues = NULL;
+//  unsigned long	parType;
+//  
+//  
+//  if( noHVPS() )
+//    return;
+//  
+//  if(( i = OneHVPS() ) >= 0 )
+//    handle = System[i].Handle;
+//  
+//  strcpy(parName, "Temp");
+//  bdList = malloc(MAX_BD_NUM * sizeof(unsigned short));
+//  int nBD = 0;
+//  for(int slot =0; slot<10; slot+=2){
+//    bdList[nBD] = slot;
+//    nBD = nBD + 1;
+//  }
+//  printf("number of boards %d\n",nBD);
+//  ret = CAENHV_GetBdParamProp(handle, bdList[0], parName, "Type", &parType);
+//  if(ret != CAENHV_OK || parType != PARAM_TYPE_NUMERIC){
+//    printf("error in getting board temperatures");
+//    if(parValues != NULL)
+//      free(parValues);
+//    free(bdList);
+//    return;
+//  }
+//  parValues = malloc(nBD*sizeof(float));
+//  ret = CAENHV_GetBdParam(handle, nBD, bdList, parName, parValues);
+//  if(ret != CAENHV_OK){
+//    printf("error in getting board temperatures");
+//    if(parValues != NULL)
+//      free(parValues);
+//    free(bdList);
+//    return;
+//  }
+//  for(i = 0; i<nBD; i++){
+//    printf("Board %d Temperature: %.2f\n",bdList[i],parValues[i]);
+//  }
+//  if(parValues != NULL)
+//    free(parValues);
+//  free(bdList);
+//
+//}
+
+
 void HVBdTemps(){
   int handle = -1;
   CAENHVRESULT ret;
   int i;
   char parName[30];
-  unsigned short *bdList;
-  float	*parValues = NULL;
-  unsigned long	parType;
-  
+
+  unsigned char parValues[512];
+  unsigned int parType;
+  float Temp = 0;
   
   if( noHVPS() )
     return;
@@ -151,40 +203,28 @@ void HVBdTemps(){
     handle = System[i].Handle;
   
   strcpy(parName, "Temp");
-  bdList = malloc(MAX_BD_NUM * sizeof(unsigned short));
-  int nBD = 0;
-  for(int slot =0; slot<10; slot+=2){
-    bdList[nBD] = slot;
-    nBD = nBD + 1;
-  }
-  printf("number of boards %d\n",nBD);
-  ret = CAENHV_GetBdParamProp(handle, bdList[0], parName, "Type", &parType);
-  if(ret != CAENHV_OK || parType != PARAM_TYPE_NUMERIC){
-    printf("error in getting board temperatures");
-    if(parValues != NULL)
-      free(parValues);
-    free(bdList);
-    return;
-  }
-  parValues = malloc(nBD*sizeof(float));
-  ret = CAENHV_GetBdParam(handle, nBD, bdList, parName, parValues);
-  if(ret != CAENHV_OK){
-    printf("error in getting board temperatures");
-    if(parValues != NULL)
-      free(parValues);
-    free(bdList);
-    return;
-  }
-  for(i = 0; i<nBD; i++){
-    printf("Board %d Temperature: %.2f\n",bdList[i],parValues[i]);
-  }
-  if(parValues != NULL)
-    free(parValues);
-  free(bdList);
 
+  unsigned short slot, ch;
+  // we use every other slot
+  for(slot =0; slot<10; slot+=2){
+    ret = CAENHV_GetBdParamProp(handle, slot, parName, "Type", &parType);
+    if(ret != CAENHV_OK || parType != PARAM_TYPE_NUMERIC){
+      printf("error in getting board temperatures");
+      return;
+    }
+    ret = CAENHV_GetBdParam(handle, 1, &slot, parName, (void*)parValues);
+    if(ret != CAENHV_OK){
+      printf("error in getting board temperatures");
+      return;
+    }
+    Temp = *((float *)parValues);
+    printf("Board %d Temperature: %.2f\n",slot,Temp);
+    fprintf(outfile,"Board %d Temperature: %.2f\n",slot,Temp);
+  }//slots
+  
 }
 
-//Main function to read all importatn values from all our boards
+//Main function to read all important values from all our boards
 void HVRead(){
  int handle = -1;
   CAENHVRESULT ret;
@@ -251,8 +291,8 @@ void HVRead(){
       }//parameters to read
 
       
-      printf("%s:\t%s\t%.2f\t%.5f\t",chName,onoff,VMon,IMon);
-
+      printf("%2d %2d %s:\t\t%s\t%.2f\t%.5f\t",slot,ch,chName,onoff,VMon,IMon);
+      fprintf(outfile,"%2d %2d %s:\t\t%s\t%.2f\t%.5f\t",slot,ch,chName,onoff,VMon,IMon);
       
       char *stats[] = {"On", "Ramp Up", "Ramp Down", "Over Current",
 		       "Over Voltage", "UnderVoltage", "Ext. Trip",
@@ -266,6 +306,7 @@ void HVRead(){
       }
       
       printf("\t%d\n",status);
+      fprintf(outfile,"\t%d\n",status);
     }// channles
   }// slots
 }

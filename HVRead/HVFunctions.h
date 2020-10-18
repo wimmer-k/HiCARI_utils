@@ -16,3 +16,5 @@ void HVTestCh(unsigned short, unsigned short);
 void HVRead();
 
 extern HV System[];
+
+FILE *outfile;

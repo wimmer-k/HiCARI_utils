@@ -9,24 +9,42 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <ncurses.h>
 #include "HVFunctions.h"
 
-
 HV System[MAX_HVPS];
+bool signal_received = false;
+void signalhandler(int sig){
+  if (sig == SIGINT){
+    signal_received = true;
+  }
+}
+
+
+
 int main(void){
+
+  signal(SIGINT, signalhandler);
+  
   int ret;
   for(ret = 0; ret < MAX_HVPS; ret++)
     System[ret].ID = -1;
 
-  (*HVLogin)();
-  (*HVBdTemps)();
-  //(*HVTestCh)(6, 0, "Pw");
-  //(*HVTestCh)(0, 0);
-  (*HVRead)();
-  //(*HVChNames)();
-  //(*HVReadCh)("VMon");
-  //(*HVReadValues)();
-  (*HVLogout)();
+  HVLogin();
+  while(!signal_received){
+    outfile = fopen("HVStatus.dat", "w");
+    HVBdTemps(); 
+    HVRead();
+    fclose(outfile);
+    sleep(5);
+  } 
+  //HVRead();
+  //HVTestCh(6, 0, "Pw");
+  //HVTestCh(0, 0);
+  //HVChNames();
+  //HVReadCh("VMon");
+  //HVReadValues();
+  HVLogout();
 
   return 0;
 }
