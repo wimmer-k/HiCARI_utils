@@ -47,9 +47,15 @@ class PlotProc():
             self.lines[i].set_xdata(xdata)
             self.lines[i].set_ydata(ydata[i])
 
+        
+        
         # rescale plot
         self.ax.relim()
         self.ax.autoscale_view()
+        onedayago = xdata[-1] + datetime.timedelta(hours = -24)
+        if onedayago > xdata[0]:
+            self.ax.set_xlim(xmin =onedayago)
+            
         plt.tight_layout()
 
         if self.plot > 0:
