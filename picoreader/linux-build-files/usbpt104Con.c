@@ -318,7 +318,7 @@ void CollectData()
 	// Allow time for collection of data from all 4 channels
 	Sleep(2880);
 
-	while(!_kbhit() && (g_status == PICO_OK || g_status == PICO_NO_SAMPLES_AVAILABLE || g_status == PICO_WARNING_REPEAT_VALUE))
+	while((g_status == PICO_OK || g_status == PICO_NO_SAMPLES_AVAILABLE || g_status == PICO_WARNING_REPEAT_VALUE))
 	{
 		for(channel = 0; channel < NUM_CHANNELS; channel++)
 		//for(channel = 0; channel < NUM_CHANNELS && (g_status == PICO_OK || g_status == PICO_NO_SAMPLES_AVAILABLE); channel++)

@@ -50,11 +50,11 @@ class PlotProc():
         
         
         # rescale plot
-        self.ax.relim()
-        self.ax.autoscale_view()
         onedayago = xdata[-1] + datetime.timedelta(hours = -24)
         if onedayago > xdata[0]:
-            self.ax.set_xlim(xmin =onedayago)
+            self.ax.set_xlim(xmin =onedayago, xmax= xdata[-1]+ datetime.timedelta(hours = 0.5))
+        self.ax.relim()
+        self.ax.autoscale_view()
             
         plt.tight_layout()
 
