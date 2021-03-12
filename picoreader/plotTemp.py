@@ -11,8 +11,8 @@ from multiprocessing import Process
 plt.ion()
 
 nch = 4
-namedet = ["MB4 RT #17", "MB2 RC #16", "MB0 RB #12", "MB5 LT #13", "CL0 RB #09", "CL1 LB #12", "CL2 RT #08", "CL3 LT #14", "MB1 LB #23", "MB3 LC #18", "dummy2", "dummy3"]
-donotdraw = [10,11]
+namedet = ["MB4 RT #17", "MB2 RC #16", "MB0 RB #12", "MB5 LT #13", "CL0 RB #09", "CL1 LB #12", "CL2 RT #08", "CL3 LT #14", "MB3 LC #18", "MB1 LB #23", "dummy2", "dummy3"]
+donotdraw = [9,10,11]
 
 class PlotProc():
 
@@ -47,7 +47,7 @@ class PlotProc():
             self.lines[i].set_xdata(xdata)
             self.lines[i].set_ydata(ydata[i])
 
-        
+      #  print(xdata, ydata[nch-1], '\n')
         
         # rescale plot
         onedayago = xdata[-1] + datetime.timedelta(hours = -24)
@@ -93,7 +93,7 @@ class PlotProc():
             dateword = x.split()[0]
             timeword = x.split()[1]
             date_time_obj = datetime.datetime.strptime(dateword+" "+timeword, '%Y-%m-%d %H:%M:%S')
-            #print('Date-time:', date_time_obj)            
+          #  print('Date-time:', date_time_obj)            
             xdata.append(date_time_obj)
             for i in range(nch):
                 ydata[i].append(float(x.split()[2+i]))
